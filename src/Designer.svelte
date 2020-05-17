@@ -123,7 +123,7 @@ function Draw() {
                 ctx.scale(1, -1)
             }
             while (x < CANVAS_X_DIM) {
-                ctx.drawImage(imageLayer.image, x, mirrorRow ? -y + 1 : y, imageLayer.rect.w, mirrorRow ? -imageLayer.rect.h : imageLayer.rect.h)
+                ctx.drawImage(imageLayer.image, x, mirrorRow ? -y : y, imageLayer.rect.w, mirrorRow ? -imageLayer.rect.h : imageLayer.rect.h)
                 x += imageLayer.rect.w
             }
             ctx.restore()
