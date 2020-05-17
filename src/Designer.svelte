@@ -190,27 +190,39 @@ function OnNormal() {
 </script>
 
 <div id='container'>
-    <canvas id='canvas' width="{CANVAS_X_DIM}px" height="{CANVAS_Y_DIM}px"
-    ></canvas><br>
-    <input type='file' id='file-input' on:change={OnChange}>
-    <button class='size' on:click={OnMakeSmaller}>-</button>
-    <button class='size' on:click={OnMakeBigger}>+</button>
-    <br>
-    <button on:click={() => { state.selectedLayout = LAYOUT.NONE; Draw();}}>None</button>
-    <button on:click={() => { state.selectedLayout = LAYOUT.NORMAL; Draw();}}>Normal</button>
-    <button on:click={() => { state.selectedLayout = LAYOUT.VERTICAL_OFFSET; Draw();}}>Vertical Offset</button>
-    <button on:click={() => { state.selectedLayout = LAYOUT.HORIZONTAL_OFFSET; Draw();}}>Horizontal Offset</button>
-    <button on:click={() => { state.selectedLayout = LAYOUT.MIRROR_REFLECTION; Draw();}}>Mirror Reflection</button>
-    <button on:click={() => { state.selectedLayout = LAYOUT.DOUBLE_MIRROR_REFLECTION; Draw();}}>Double Mirror Reflection</button>
-    <br>
-    <button on:click={() => { state.canvasSizeCM = 100; Resize(); Draw(); }}>Linear meter</button>
-    <button on:click={() => { state.canvasSizeCM = 20; Resize(); Draw(); }}>Sample</button>
+    <div id='canvas-container'>
+        <canvas id='canvas' width="{CANVAS_X_DIM}px" height="{CANVAS_Y_DIM}px"
+        ></canvas>
+    </div>
+    <div id='layout'>
+        <input type='file' id='file-input' on:change={OnChange}><br>
+        <button class='size' on:click={OnMakeSmaller}>-</button>
+        <button class='size' on:click={OnMakeBigger}>+</button><br>
+        <button class='btn-layout' on:click={() => { state.selectedLayout = LAYOUT.NONE; Draw();}}>None</button>
+        <button class='btn-layout' on:click={() => { state.selectedLayout = LAYOUT.NORMAL; Draw();}}>Normal</button>
+        <button class='btn-layout' on:click={() => { state.selectedLayout = LAYOUT.VERTICAL_OFFSET; Draw();}}>Vertical Offset</button><br>
+        <button class='btn-layout' on:click={() => { state.selectedLayout = LAYOUT.HORIZONTAL_OFFSET; Draw();}}>Horizontal Offset</button>
+        <button class='btn-layout' on:click={() => { state.selectedLayout = LAYOUT.MIRROR_REFLECTION; Draw();}}>Mirror Reflection</button>
+        <button class='btn-layout' on:click={() => { state.selectedLayout = LAYOUT.DOUBLE_MIRROR_REFLECTION; Draw();}}>Double Mirror Reflection</button><br>
+        <button on:click={() => { state.canvasSizeCM = 100; Resize(); Draw(); }}>Linear meter</button>
+        <button on:click={() => { state.canvasSizeCM = 20; Resize(); Draw(); }}>Sample</button>
+    </div>
     <Debug {state} {imageLayer}/>
 </div>
 
 <style>
 #container {
+    display: inline-flex;
+}
+
+#layout {
     display: inline-block;
+    margin-left: 10px;
+}
+
+.btn-layout {
+    width: 120px;
+    height: 60px;
 }
 
 .size {

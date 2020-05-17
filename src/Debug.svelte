@@ -20,7 +20,7 @@ $: imageWidthCM = ((imageLayer.image ? imageLayer.image.width : 0) / state.dpi *
 #debug {
     position: fixed;
     text-align: left;
-    left: 5px;
+    left: 645px;
     top: 50%;
     width: 240px;
     background: #aaaaaa20;
