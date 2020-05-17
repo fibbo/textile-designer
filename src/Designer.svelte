@@ -49,7 +49,7 @@ function OnChange(ev) {
             imageLayer.rect.h = imageLayer.image.height
             // ctx.drawImage(imageLayer.image, imageLayer.rect.x, imageLayer.rect.y , imageLayer.image.width, imageLayer.image.height);
             Resize()
-            draw()
+            Draw()
         }
         imageLayer.image.src = res.target.result;
     }
@@ -57,7 +57,7 @@ function OnChange(ev) {
 
 }
 
-function draw() {
+function Draw() {
     if (imageLayer.image === null) {
         return
     }
@@ -96,6 +96,65 @@ function draw() {
             oddColumn = !oddColumn
             x += imageLayer.rect.w
         }
+    } else if (state.selectedLayout === LAYOUT.HORIZONTAL_OFFSET) {
+        console.log("DRAW HORIZONTAL OFFSET")
+        let y = 0
+        let oddRow = false
+        while (y < CANVAS_Y_DIM) {
+            let x = 0
+            if (oddRow) {
+               x -= imageLayer.rect.w / 2 
+            }
+            while (x < CANVAS_X_DIM) {
+                ctx.drawImage(imageLayer.image, x, y, imageLayer.rect.w, imageLayer.rect.h)
+                x += imageLayer.rect.w
+            }
+            oddRow = !oddRow
+            y += imageLayer.rect.h
+        }
+    } else if (state.selectedLayout === LAYOUT.MIRROR_REFLECTION) {
+        console.log("DRAW MIRROR REFLECTION")
+        let y = 0
+        let mirrorRow = false
+        while (y < CANVAS_Y_DIM) {
+            let x = 0
+            ctx.save()
+            if (mirrorRow) {
+                ctx.scale(1, -1)
+            }
+            while (x < CANVAS_X_DIM) {
+                ctx.drawImage(imageLayer.image, x, mirrorRow ? -y + 1 : y, imageLayer.rect.w, mirrorRow ? -imageLayer.rect.h : imageLayer.rect.h)
+                x += imageLayer.rect.w
+            }
+            ctx.restore()
+            mirrorRow = !mirrorRow
+            y += imageLayer.rect.h
+        }
+    } else if (state.selectedLayout === LAYOUT.DOUBLE_MIRROR_REFLECTION) {
+        console.log("DRAW DOUBLE MIRROR REFLECTION")
+        let y = 0
+        let mirrorRow = false
+        while (y < CANVAS_Y_DIM) {
+            let x = 0
+            ctx.save()
+            if (mirrorRow) {
+                ctx.transform(1, 0, 0, -1, 0, 0)
+            }
+            let mirrorColumn = false
+            while (x < CANVAS_X_DIM) {
+                ctx.save()
+                if (mirrorColumn) {
+                    ctx.transform(-1, 0, 0, 1, 0, 0)
+                }
+                ctx.drawImage(imageLayer.image, mirrorColumn ? -x : x, mirrorRow ? -y + 1 : y, mirrorColumn ? -imageLayer.rect.w : imageLayer.rect.w, mirrorRow ? -imageLayer.rect.h : imageLayer.rect.h)
+                x += imageLayer.rect.w
+                mirrorColumn = !mirrorColumn
+                ctx.restore()
+            }
+            ctx.restore()
+            mirrorRow = !mirrorRow
+            y += imageLayer.rect.h
+        }
     }
 }
 
@@ -111,7 +170,7 @@ function Resize() {
 function OnMakeSmaller(ev) {
     state.dpi += state.dpiStepSize
     Resize()
-    draw()
+    Draw()
 }
 
 function OnMakeBigger(ev) {
@@ -121,12 +180,12 @@ function OnMakeBigger(ev) {
     }
     state.dpi -= state.dpiStepSize
     Resize()
-    draw()
+    Draw()
 }
 
 function OnNormal() {
     state.selectedLayout = LAYOUT.NORMAL
-    draw()
+    Draw()()
 }
 </script>
 
@@ -134,21 +193,37 @@ function OnNormal() {
     <canvas id='canvas' width="{CANVAS_X_DIM}px" height="{CANVAS_Y_DIM}px"
     ></canvas><br>
     <input type='file' id='file-input' on:change={OnChange}>
-    <button on:click={OnMakeSmaller}>Smaller</button>
-    <button on:click={OnMakeBigger}>Bigger</button>
+    <button class='size' on:click={OnMakeSmaller}>-</button>
+    <button class='size' on:click={OnMakeBigger}>+</button>
     <br>
-    <button on:click={() => { state.selectedLayout = LAYOUT.NONE; draw();}}>None</button>
-    <button on:click={() => { state.selectedLayout = LAYOUT.NORMAL; draw();}}>Normal</button>
-    <button on:click={() => { state.selectedLayout = LAYOUT.VERTICAL_OFFSET; draw();}}>Vertical Offset</button>
+    <button on:click={() => { state.selectedLayout = LAYOUT.NONE; Draw();}}>None</button>
+    <button on:click={() => { state.selectedLayout = LAYOUT.NORMAL; Draw();}}>Normal</button>
+    <button on:click={() => { state.selectedLayout = LAYOUT.VERTICAL_OFFSET; Draw();}}>Vertical Offset</button>
+    <button on:click={() => { state.selectedLayout = LAYOUT.HORIZONTAL_OFFSET; Draw();}}>Horizontal Offset</button>
+    <button on:click={() => { state.selectedLayout = LAYOUT.MIRROR_REFLECTION; Draw();}}>Mirror Reflection</button>
+    <button on:click={() => { state.selectedLayout = LAYOUT.DOUBLE_MIRROR_REFLECTION; Draw();}}>Double Mirror Reflection</button>
     <br>
-    <button on:click={() => { state.canvasSizeCM = 100; Resize(); draw(); }}>Linear meter</button>
-    <button on:click={() => { state.canvasSizeCM = 20; Resize(); draw(); }}>Sample</button>
+    <button on:click={() => { state.canvasSizeCM = 100; Resize(); Draw(); }}>Linear meter</button>
+    <button on:click={() => { state.canvasSizeCM = 20; Resize(); Draw(); }}>Sample</button>
     <Debug {state} {imageLayer}/>
 </div>
 
 <style>
 #container {
     display: inline-block;
+}
+
+.size {
+    width: 40px;
+    height: 40px;
+    color: #fff;
+    font-size: 30px;
+    line-height: 34px;
+    text-align: center;
+    background: #434244;
+    margin-right: 10px;
+    font-family: Arial;
+    text-decoration: none;
 }
 
 #canvas {
