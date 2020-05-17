@@ -146,14 +146,14 @@ function Draw() {
                 if (mirrorColumn) {
                     ctx.transform(-1, 0, 0, 1, 0, 0)
                 }
-                ctx.drawImage(imageLayer.image, mirrorColumn ? -x : x, mirrorRow ? -y + 1 : y, mirrorColumn ? -imageLayer.rect.w : imageLayer.rect.w, mirrorRow ? -imageLayer.rect.h : imageLayer.rect.h)
-                x += imageLayer.rect.w
+                ctx.drawImage(imageLayer.image, mirrorColumn ? -x : x, mirrorRow ? -y: y, mirrorColumn ? -imageLayer.rect.w : imageLayer.rect.w, mirrorRow ? -imageLayer.rect.h : imageLayer.rect.h)
+                x += Math.floor(imageLayer.rect.w)
                 mirrorColumn = !mirrorColumn
                 ctx.restore()
             }
             ctx.restore()
             mirrorRow = !mirrorRow
-            y += imageLayer.rect.h
+            y += Math.floor(imageLayer.rect.h)
         }
     }
 }
