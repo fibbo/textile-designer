@@ -2,105 +2,36 @@
 import Debug from './Debug.svelte';
 import { createEventDispatcher } from 'svelte';
 const dispatch = createEventDispatcher();
-const CANVAS_X_DIM = 800;
+const CANVAS_X_DIM = 600;
 const CANVAS_Y_DIM = 600;
-
+const TO_CM = 2.54
 let imageLayer = {
-    img: new Image(),
+    image: null,
     rect : {
-        x: 30,
-        y: 30,
-        w: 220,
-        h: 60,
+        x: 0,
+        y: 0,
+        w: 0,
+        h: 0,
     },
     aspectRatio: 0,
 }
-
-let state = {
-    canvasSize: 0.2,
-    dpi: 150
+const LAYOUT = {
+    'NONE': 0,
+    'NORMAL': 1,
+    'VERTICAL_OFFSET': 2,
+    'HORIZONTAL_OFFSET': 3,
+    'MIRROR_REFLECTION': 4,
+    'DOUBLE_MIRROR_REFLECTION': 5,
 }
 
-// export let pointerInfo = {
-//     dragging: false,
-//     pointerInImage: false,
-//     canvasX: 0,
-//     canvasY: 0,
-//     imageOffsetX: 0,
-//     imageOffsetY: 0,
-// }
+let state = {
+    canvasSizeCM: 20,
+    dpi: 150,
+    dpiStepSize: 15,
+    minDpi: 150,
+    selectedLayout: LAYOUT.NONE
+}
 
-// function clampToCanvas() {
-//     if (imageLayer.position.x < 0) {
-//         imageLayer.position.x = 0;
-//     }
-//     if (imageLayer.position.x + imageLayer.position.w > CANVAS_X_DIM) {
-//         imageLayer.position.x = CANVAS_X_DIM - imageLayer.position.w;
-//     }
-//     if (imageLayer.position.y < 0) {
-//         imageLayer.position.y = 0;
-//     }
-//     if (imageLayer.position.y + imageLayer.position.h > CANVAS_Y_DIM) {
-//         imageLayer.position.y = CANVAS_Y_DIM - imageLayer.position.h;
-//     }
-// }
-
-// function updatePointerInfo(ev) {
-//     const cvs = document.getElementById('canvas')
-//     const ctx = cvs.getContext('2d')
-//     const rect = cvs.getBoundingClientRect();
-//     pointerInfo.pointerInImage = pointerInImage()
-//     pointerInfo.canvasX = ev.clientX - rect.x;
-//     pointerInfo.canvasY = ev.clientY - rect.y; 
-// }
-
-// function pointerInImage() {
-//     return imageLayer.img && imageLayer.position.x <= pointerInfo.canvasX &&
-//            imageLayer.position.x + imageLayer.position.w >= pointerInfo.canvasX &&
-//            imageLayer.position.y <= pointerInfo.canvasY &&
-//            imageLayer.position.y + imageLayer.position.h >= pointerInfo.canvasY
-// }
-
-// function OnPointerDown(ev) {
-//     const cvs = document.getElementById('canvas');
-//     cvs.setPointerCapture(ev.pointerId);
-//     ev.preventDefault();
-//     updatePointerInfo(ev);
-//     if (pointerInImage()) {
-//         pointerInfo.dragging = true;
-//     }
-//     pointerInfo.imageOffsetX = pointerInfo.canvasX - imageLayer.position.x;
-//     pointerInfo.imageOffsetY = pointerInfo.canvasY - imageLayer.position.y;
-// }
-
-
-// function OnPointerMove(ev) {
-//     ev.preventDefault();
-//     updatePointerInfo(ev);
-//     if (pointerInfo.dragging) {
-//         const cvs = document.getElementById('canvas')
-//         const ctx = cvs.getContext('2d')
-//         imageLayer.position.x = pointerInfo.canvasX - pointerInfo.imageOffsetX;
-//         imageLayer.position.y = pointerInfo.canvasY - pointerInfo.imageOffsetY;
-//         imageLayer.position.h = imageLayer.position.w / imageLayer.aspectRatio;
-//         clampToCanvas();
-//         ctx.clearRect(0, 0, cvs.width, cvs.height);
-//         ctx.globalAlpha = 0.4;
-//         ctx.drawImage(imageLayer.img, imageLayer.position.x, imageLayer.position.y, imageLayer.position.w, imageLayer.position.h)
-//     }
-// }
-
-// function OnPointerUp(ev) {
-//     const cvs = document.getElementById('canvas')
-//     cvs.releasePointerCapture(ev.pointerId);
-//     ev.preventDefault();
-//     const ctx = cvs.getContext('2d')
-//     ctx.globalAlpha = 1.0;
-//     if (pointerInfo.dragging) {
-//         pointerInfo.dragging = false;
-//         ctx.drawImage(imageLayer.img, imageLayer.position.x, imageLayer.position.y, imageLayer.position.w, imageLayer.position.h)
-//     }
-// }
 
 function OnChange(ev) {
     console.log(ev)
@@ -108,43 +39,93 @@ function OnChange(ev) {
     const file = ev.target.files[0];
     console.log(file)
     const reader = new FileReader()
-
+    imageLayer.image = new Image()
     reader.onload = (res) => {
         const cvs = document.getElementById('canvas')
         const ctx = cvs.getContext('2d')
-        imageLayer.img.onload = function(){
-            imageLayer.aspectRatio = imageLayer.img.width/imageLayer.img.height;
-            imageLayer.rect.x = cvs.width / 2 - imageLayer.img.width / 2
-            imageLayer.rect.y = cvs.height / 2 - imageLayer.img.height/ 2
-            imageLayer.rect.w = imageLayer.img.width
-            imageLayer.rect.h = imageLayer.img.height
-            ctx.drawImage(imageLayer.img, imageLayer.rect.x, imageLayer.rect.y , imageLayer.img.width, imageLayer.img.height);
+        imageLayer.image.onload = function(){
+            imageLayer.aspectRatio = imageLayer.image.width/imageLayer.image.height;
+            imageLayer.rect.w = imageLayer.image.width
+            imageLayer.rect.h = imageLayer.image.height
+            // ctx.drawImage(imageLayer.image, imageLayer.rect.x, imageLayer.rect.y , imageLayer.image.width, imageLayer.image.height);
+            Resize()
+            draw()
         }
-        imageLayer.img.src = res.target.result;
+        imageLayer.image.src = res.target.result;
     }
     reader.readAsDataURL(ev.target.files[0]); 
 
 }
 
 function draw() {
+    if (imageLayer.image === null) {
+        return
+    }
     const cvs = document.getElementById('canvas')
     const ctx = cvs.getContext('2d')
-    imageLayer.rect.x = cvs.width / 2 - imageLayer.rect.w / 2
-    imageLayer.rect.y = cvs.height / 2 - imageLayer.rect.h / 2
-    console.log(imageLayer.rect.w, imageLayer.rect.h)
     ctx.clearRect(0, 0, cvs.width, cvs.height)
-    ctx.drawImage(imageLayer.img, imageLayer.rect.x, imageLayer.rect.y , imageLayer.rect.w, imageLayer.rect.h);
+    if (state.selectedLayout === LAYOUT.NONE) {
+        console.log('DRAW NONE')
+        imageLayer.rect.x = cvs.width / 2 - imageLayer.rect.w / 2
+        imageLayer.rect.y = cvs.height / 2 - imageLayer.rect.h / 2
+        ctx.drawImage(imageLayer.image, imageLayer.rect.x, imageLayer.rect.y , imageLayer.rect.w, imageLayer.rect.h);
+    } else if (state.selectedLayout === LAYOUT.NORMAL) {
+        console.log('DRAW NORMAL')
+        let y = 0
+        while (y < CANVAS_Y_DIM) {
+            let x = 0
+            while (x < CANVAS_X_DIM) {
+                ctx.drawImage(imageLayer.image, x, y, imageLayer.rect.w, imageLayer.rect.h)
+                x += imageLayer.rect.w
+            }
+            y += imageLayer.rect.h
+        }
+    } else if (state.selectedLayout === LAYOUT.VERTICAL_OFFSET) {
+        console.log('DRAW VERTICAL OFFSET')
+        let x = 0
+        let oddColumn = false
+        while (x < CANVAS_X_DIM) {
+            let y = 0 
+            if (oddColumn) {
+                y -= imageLayer.rect.h / 2
+            }
+            while (y < CANVAS_Y_DIM) {
+                ctx.drawImage(imageLayer.image, x, y, imageLayer.rect.w, imageLayer.rect.h)
+                y += imageLayer.rect.h
+            }
+            oddColumn = !oddColumn
+            x += imageLayer.rect.w
+        }
+    }
+}
+
+function Resize() {
+    const sizeInCm = imageLayer.image.width / state.dpi * TO_CM
+    const w = sizeInCm * CANVAS_X_DIM / state.canvasSizeCM
+    const factor = w / imageLayer.rect.w
+
+    imageLayer.rect.w = w
+    imageLayer.rect.h *= factor 
 }
 
 function OnMakeSmaller(ev) {
-    imageLayer.rect.w *= 0.9
-    imageLayer.rect.h *= 0.9
+    state.dpi += state.dpiStepSize
+    Resize()
     draw()
 }
 
 function OnMakeBigger(ev) {
-    imageLayer.rect.w *= 1.1
-    imageLayer.rect.h *= 1.1
+    if (state.dpi <= state.minDpi) {
+        // 150 DPI is the minimum DPI to ensure decent print quality
+        return
+    }
+    state.dpi -= state.dpiStepSize
+    Resize()
+    draw()
+}
+
+function OnNormal() {
+    state.selectedLayout = LAYOUT.NORMAL
     draw()
 }
 </script>
@@ -155,6 +136,14 @@ function OnMakeBigger(ev) {
     <input type='file' id='file-input' on:change={OnChange}>
     <button on:click={OnMakeSmaller}>Smaller</button>
     <button on:click={OnMakeBigger}>Bigger</button>
+    <br>
+    <button on:click={() => { state.selectedLayout = LAYOUT.NONE; draw();}}>None</button>
+    <button on:click={() => { state.selectedLayout = LAYOUT.NORMAL; draw();}}>Normal</button>
+    <button on:click={() => { state.selectedLayout = LAYOUT.VERTICAL_OFFSET; draw();}}>Vertical Offset</button>
+    <br>
+    <button on:click={() => { state.canvasSizeCM = 100; Resize(); draw(); }}>Linear meter</button>
+    <button on:click={() => { state.canvasSizeCM = 20; Resize(); draw(); }}>Sample</button>
+    <Debug {state} {imageLayer}/>
 </div>
 
 <style>
